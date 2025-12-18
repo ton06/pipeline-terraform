@@ -1,0 +1,1 @@
+bucket_name = "testes_pipeline_terraform"
