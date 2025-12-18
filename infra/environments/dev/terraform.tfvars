@@ -1,1 +1,1 @@
-bucket_name = "testes_pipeline_terraform"
+bucket_name = "testes-pipeline-terraform"
