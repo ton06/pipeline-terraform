@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - develop
+
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   terraform:
-    uses: ton06/workflows/.github/workflows/develop.yml@main
+    uses: ton06/workflows/.github/workflows/deploy.yml@main
+    with:
+      aws-region: "sa-east-1"
+      environment: "dev"
