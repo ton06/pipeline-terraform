@@ -5,16 +5,6 @@ on:
     branches:
       - main
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   terraform:
-    uses: ./.github/workflows/terraform.yml
-    with:
-      environment: prod
-      aws-assume-role-arn: "arn:aws:iam::031599779835:role/github-actions-ton06-pipeline"
-      aws-region: "sa-east-1"
-      aws-statefile-s3-bucket: "ton06-sa-east-1-terraform-statefile"
-      aws-lock-dynamodb-table: "ton06-sa-east-1-terraform-lock"
+    uses: ton06/workflows/.github/workflows/main.yml@main
