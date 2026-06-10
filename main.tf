@@ -1,7 +1,7 @@
 # =============================================================================
 # main.tf — Recursos principais da infraestrutura Windrose na AWS
 # Imagem Docker: indifferentbroccoli/windrose-server-docker
-# SO: Ubuntu 24.04 LTS
+# SO: Ubuntu 26.04 LTS
 # Acesso: IAM Instance Profile + SSM Session Manager (sem key pair / sem SSH)
 # =============================================================================
 
@@ -37,14 +37,14 @@ provider "aws" {
 # Data Sources
 # -----------------------------------------------------------------------------
 
-# AMI mais recente do Ubuntu 24.04 LTS (64-bit x86)
+# AMI mais recente do Ubuntu 26.04 LTS (64-bit x86)
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-plucky-26.04-amd64-server-*"]
   }
 
   filter {
