@@ -1,0 +1,53 @@
+# =============================================================================
+# terraform.tfvars.example
+# Copie este arquivo para terraform.tfvars e preencha os valores.
+# NUNCA commite o terraform.tfvars — ele esta no .gitignore.
+# =============================================================================
+
+# ------------------------------------------------------------------------------
+# OBRIGATORIO — preencha antes de rodar o terraform apply
+# ------------------------------------------------------------------------------
+
+# Nome do Key Pair existente na sua conta AWS (regiao sa-east-1).
+# Para criar: AWS Console -> EC2 -> Key Pairs -> Create key pair
+# Apos criar, baixe o arquivo .pem e guarde com seguranca.
+key_pair_name = "PREENCHA_COM_SEU_KEY_PAIR_NAME"
+
+# IP do administrador que tera acesso RDP ao servidor.
+# Formato CIDR: "203.0.113.10/32" para um IP especifico.
+# Descubra seu IP atual: https://checkip.amazonaws.com
+# EVITE "0.0.0.0/0" — libera RDP para o mundo todo (risco de seguranca).
+admin_cidr_ssh = "SEU_IP/32"
+
+# ------------------------------------------------------------------------------
+# OPCIONAL — valores padrao ja configurados, altere se necessario
+# ------------------------------------------------------------------------------
+
+# Tipo da instancia EC2.
+# Padrao: t3.large (2 vCPU / 8 GB RAM)
+# ATENCAO: O guia oficial do Windrose recomenda 12 GB RAM para 4 jogadores
+#   e 16 GB RAM para ate 10 jogadores. Se notar lentidao, considere upgrade
+#   para m5.xlarge (4 vCPU / 16 GB RAM).
+# Referencia de precos: https://instances.vantage.sh
+instance_type = "t3.large"
+
+# Regiao AWS. Mantenha sa-east-1 para menor latencia no Brasil.
+aws_region = "sa-east-1"
+
+# Nome do servidor Windrose visivel para os jogadores.
+server_name = "Windrose Server"
+
+# Codigo de convite (min. 6 caracteres, case-sensitive, apenas 0-9 a-z A-Z).
+invite_code = "amigos2026"
+
+# Senha do servidor. Deixe vazio para servidor sem senha.
+server_password = ""
+
+# Numero maximo de jogadores simultaneos.
+max_players = 6
+
+# Porta de conexao direta (TCP + UDP).
+direct_connection_port = 7777
+
+# Dificuldade do mundo: "Easy", "Medium" ou "Hard"
+world_preset = "Medium"

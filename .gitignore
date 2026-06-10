@@ -1,0 +1,26 @@
+# Terraform state - NUNCA commite estes arquivos
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Variaveis com segredos - NUNCA commite
+*.tfvars
+!terraform.tfvars.example
+
+# Diretorio Terraform
+.terraform/
+.terraform.lock.hcl
+
+# Logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# OS
+.DS_Store
+Thumbs.db
