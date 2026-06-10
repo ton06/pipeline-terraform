@@ -8,7 +8,7 @@ Infraestrutura Terraform para subir um servidor dedicado do jogo **Windrose** na
 
 ## 🐳 Stack
 
-- **EC2**: Ubuntu 24.04 LTS (`t3.large` por padrão) — sem custo de licença Windows
+- **EC2**: Ubuntu 24.04 LTS (`t3.large` por padrão)
 - **Container**: [`indifferentbroccoli/windrose-server-docker`](https://github.com/indifferentbroccoli/windrose-server-docker)
 - **Orquestração**: Docker Compose
 - **Região**: `sa-east-1` (São Paulo)
@@ -110,17 +110,15 @@ Compartilhe com os amigos:
 ./scripts/manage_instance.sh status
 ```
 
-> ⚠️ O **Elastic IP** gera ~$0.005/hora quando alocado sem instância rodando. Use `terraform destroy` para eliminar todos os custos quando não for usar por um período longo.
-
 ### Estimativa de custos (on-demand, sa-east-1)
 
-| Recurso | t3.large Linux | t3.large Windows (ref.) |
-|---|---|---|
-| EC2/hora | ~$0.104 | ~$0.208 |
-| **Mensal 24/7** | **~$75/mês** | ~~$150/mês~~ |
-| **Mensal 8h/dia** | **~$25/mês** | ~~$50/mês~~ |
-| EBS gp3 50 GB | ~$5/mês | ~$5/mês |
-| Elastic IP | ~$3.6/mês | ~$3.6/mês |
+| Recurso | t3.large |
+|---|---|
+| EC2/hora | ~$0.104 |
+| **Mensal 24/7** | **~$75/mês** |
+| **Mensal 8h/dia** | **~$25/mês** |
+| EBS gp3 50 GB | ~$5/mês |
+| Elastic IP | ~$3.6/mês |
 
 ---
 
