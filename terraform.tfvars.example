@@ -34,14 +34,14 @@ instance_type = "t3.large"
 # Regiao AWS. Mantenha sa-east-1 para menor latencia no Brasil.
 aws_region = "sa-east-1"
 
-# Nome do servidor Windrose visivel para os jogadores.
-server_name = "Windrose Server"
+# Nome do servidor Windrose visivel para os jogadores in game.
+server_name = "PlayerShip"
 
 # Codigo de convite (min. 6 caracteres, case-sensitive, apenas 0-9 a-z A-Z).
 invite_code = "amigos2026"
 
-# Senha do servidor. Deixe vazio para servidor sem senha.
-server_password = ""
+# Senha para entrar no servidor in game. Deixe vazio para servidor sem senha.
+server_password = "butuca"
 
 # Numero maximo de jogadores simultaneos.
 max_players = 6
