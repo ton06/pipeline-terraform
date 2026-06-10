@@ -1,0 +1,15 @@
+name: "Deploy Windrose Server"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    uses: ton06/workflows/.github/workflows/terraform.yml@main
+    with:
+      environment: prods
+      aws-region: sa-east-1
+      aws-assume-role-arn: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+      aws-statefile-s3-bucket: ${{ secrets.AWS_STATEFILE_S3_BUCKET }}
