@@ -15,21 +15,21 @@ variable "key_pair_name" {
 }
 
 variable "admin_cidr_ssh" {
-  description = "CIDR IP autorizado para acesso RDP (porta 3389). Ex: '203.0.113.10/32'. Descubra seu IP em: https://checkip.amazonaws.com"
+  description = "CIDR IP autorizado para acesso SSH (porta 22). Ex: '203.0.113.10/32'. Descubra seu IP em: https://checkip.amazonaws.com"
   type        = string
   # Sem default — obrigatorio preencher no terraform.tfvars
 }
 
 variable "instance_type" {
-  description = "Tipo da instancia EC2. Padrao: t3.large (2 vCPU / 8 GB RAM). ATENCAO: o guia oficial recomenda 12 GB para 4 jogadores e 16 GB para 6-10 jogadores. Considere m5.xlarge se notar lentidao."
+  description = "Tipo da instancia EC2 Linux. Padrao: t3.large (2 vCPU / 8 GB RAM). Sem custo de licenca Windows."
   type        = string
   default     = "t3.large"
 }
 
 variable "server_name" {
-  description = "Nome do servidor Windrose exibido para os jogadores."
+  description = "Nome do servidor Windrose exibido para os jogadores in game."
   type        = string
-  default     = "Windrose Server"
+  default     = "PlayerShip"
 }
 
 variable "invite_code" {
@@ -39,9 +39,9 @@ variable "invite_code" {
 }
 
 variable "server_password" {
-  description = "Senha do servidor. Deixe vazio para acesso livre entre os convidados."
+  description = "Senha para entrar no servidor in game. Deixe vazio para servidor sem senha."
   type        = string
-  default     = ""
+  default     = "butuca"
   sensitive   = true
 }
 
@@ -51,19 +51,20 @@ variable "max_players" {
   default     = 6
 }
 
-variable "direct_connection_port" {
-  description = "Porta usada para conexao direta TCP+UDP. Padrao oficial do Windrose: 7777."
+variable "server_port" {
+  description = "Porta do servidor para conexao direta TCP+UDP. Padrao oficial do Windrose: 7777."
   type        = number
   default     = 7777
 }
 
-variable "world_preset" {
-  description = "Dificuldade do mundo: Easy, Medium ou Hard."
-  type        = string
-  default     = "Medium"
+variable "use_direct_connection" {
+  description = "Habilita conexao direta por IP:porta (USE_DIRECT_CONNECTION=true). Recomendado para servidores sem relay."
+  type        = bool
+  default     = true
+}
 
-  validation {
-    condition     = contains(["Easy", "Medium", "Hard"], var.world_preset)
-    error_message = "world_preset deve ser 'Easy', 'Medium' ou 'Hard'."
-  }
+variable "update_on_start" {
+  description = "Atualiza automaticamente o servidor ao iniciar o container."
+  type        = bool
+  default     = true
 }

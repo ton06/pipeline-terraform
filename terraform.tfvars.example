@@ -13,21 +13,18 @@
 # Apos criar, baixe o arquivo .pem e guarde com seguranca.
 key_pair_name = "PREENCHA_COM_SEU_KEY_PAIR_NAME"
 
-# IP do administrador que tera acesso RDP ao servidor.
+# IP do administrador que tera acesso SSH ao servidor.
 # Formato CIDR: "203.0.113.10/32" para um IP especifico.
 # Descubra seu IP atual: https://checkip.amazonaws.com
-# EVITE "0.0.0.0/0" — libera RDP para o mundo todo (risco de seguranca).
+# EVITE "0.0.0.0/0" — libera SSH para o mundo todo (risco de seguranca).
 admin_cidr_ssh = "SEU_IP/32"
 
 # ------------------------------------------------------------------------------
 # OPCIONAL — valores padrao ja configurados, altere se necessario
 # ------------------------------------------------------------------------------
 
-# Tipo da instancia EC2.
-# Padrao: t3.large (2 vCPU / 8 GB RAM)
-# ATENCAO: O guia oficial do Windrose recomenda 12 GB RAM para 4 jogadores
-#   e 16 GB RAM para ate 10 jogadores. Se notar lentidao, considere upgrade
-#   para m5.xlarge (4 vCPU / 16 GB RAM).
+# Tipo da instancia EC2 Linux (sem custo de licenca Windows).
+# t3.large: 2 vCPU / 8 GB RAM — adequado para ate 6 jogadores.
 # Referencia de precos: https://instances.vantage.sh
 instance_type = "t3.large"
 
@@ -40,14 +37,17 @@ server_name = "PlayerShip"
 # Codigo de convite (min. 6 caracteres, case-sensitive, apenas 0-9 a-z A-Z).
 invite_code = "amigos2026"
 
-# Senha para entrar no servidor in game. Deixe vazio para servidor sem senha.
+# Senha para entrar no servidor in game.
 server_password = "butuca"
 
 # Numero maximo de jogadores simultaneos.
 max_players = 6
 
 # Porta de conexao direta (TCP + UDP).
-direct_connection_port = 7777
+server_port = 7777
 
-# Dificuldade do mundo: "Easy", "Medium" ou "Hard"
-world_preset = "Medium"
+# Habilita conexao direta por IP:porta.
+use_direct_connection = true
+
+# Atualiza o servidor automaticamente ao reiniciar o container.
+update_on_start = true

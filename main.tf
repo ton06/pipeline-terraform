@@ -1,5 +1,7 @@
 # =============================================================================
 # main.tf — Recursos principais da infraestrutura Windrose na AWS
+# Imagem Docker: indifferentbroccoli/windrose-server-docker
+# SO: Ubuntu 24.04 LTS (sem licenca Windows — economia de 40-60%)
 # =============================================================================
 
 terraform {
@@ -34,15 +36,14 @@ provider "aws" {
 # Data Sources
 # -----------------------------------------------------------------------------
 
-# AMI mais recente do Windows Server 2022 Base (64-bit x86)
-# O Windrose Dedicated Server e Windows-only (confirmado no guia oficial).
-data "aws_ami" "windows_2022" {
+# AMI mais recente do Ubuntu 24.04 LTS (64-bit x86)
+data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
-    values = ["Windows_Server-2022-English-Full-Base-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
   }
 
   filter {
@@ -67,14 +68,14 @@ data "aws_vpc" "default" {
 
 resource "aws_security_group" "windrose" {
   name        = "windrose-server-sg"
-  description = "Security Group do servidor Windrose. RDP restrito ao admin, porta do jogo aberta para conexoes dos jogadores."
+  description = "Security Group do servidor Windrose. SSH restrito ao admin, porta do jogo aberta para jogadores."
   vpc_id      = data.aws_vpc.default.id
 
-  # RDP — acesso remoto ao Windows Server (restrito ao IP do admin)
+  # SSH — acesso ao servidor Linux (restrito ao IP do admin)
   ingress {
-    description = "RDP - Remote Desktop do administrador"
-    from_port   = 3389
-    to_port     = 3389
+    description = "SSH - Acesso do administrador"
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.admin_cidr_ssh]
   }
@@ -82,22 +83,22 @@ resource "aws_security_group" "windrose" {
   # Porta do jogo — TCP (conexao direta dos jogadores)
   ingress {
     description = "Windrose - Direct Connection TCP"
-    from_port   = var.direct_connection_port
-    to_port     = var.direct_connection_port
+    from_port   = var.server_port
+    to_port     = var.server_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Porta do jogo — UDP (obrigatorio para conexao direta conforme guia oficial)
+  # Porta do jogo — UDP (obrigatorio para conexao direta)
   ingress {
     description = "Windrose - Direct Connection UDP"
-    from_port   = var.direct_connection_port
-    to_port     = var.direct_connection_port
+    from_port   = var.server_port
+    to_port     = var.server_port
     protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Saida irrestrita — necessario para SteamCMD baixar o servidor
+  # Saida irrestrita — necessario para Docker puxar a imagem e SteamCMD funcionar
   egress {
     description = "Saida irrestrita"
     from_port   = 0
@@ -116,15 +117,15 @@ resource "aws_security_group" "windrose" {
 # -----------------------------------------------------------------------------
 
 resource "aws_instance" "windrose" {
-  ami                    = data.aws_ami.windows_2022.id
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   key_name               = var.key_pair_name
   vpc_security_group_ids = [aws_security_group.windrose.id]
 
-  # EBS root volume — minimo de 35 GB SSD conforme requisitos do guia oficial
+  # EBS root volume — 50 GB gp3 SSD para SO + imagem Docker + saves do servidor
   root_block_device {
     volume_type           = "gp3"
-    volume_size           = 50  # 50 GB: 35 GB do jogo + margem para SO e saves
+    volume_size           = 50
     delete_on_termination = true
     encrypted             = true
 
@@ -133,15 +134,15 @@ resource "aws_instance" "windrose" {
     }
   }
 
-  # User Data: PowerShell executado automaticamente na primeira inicializacao.
-  # Instala SteamCMD e baixa o Windrose Dedicated Server (App ID 4129620).
-  user_data = templatefile("${path.module}/scripts/setup_windrose.ps1", {
-    server_name            = var.server_name
-    invite_code            = var.invite_code
-    server_password        = var.server_password
-    max_players            = var.max_players
-    direct_connection_port = var.direct_connection_port
-    world_preset           = var.world_preset
+  # User Data: instala Docker e sobe o container do Windrose automaticamente
+  user_data = templatefile("${path.module}/scripts/setup_docker.sh", {
+    server_name          = var.server_name
+    invite_code          = var.invite_code
+    server_password      = var.server_password
+    max_players          = var.max_players
+    server_port          = var.server_port
+    use_direct_connection = var.use_direct_connection
+    update_on_start      = var.update_on_start
   })
 
   user_data_replace_on_change = false

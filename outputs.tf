@@ -12,14 +12,14 @@ output "server_public_dns" {
   value       = aws_eip.windrose.public_dns
 }
 
-output "rdp_connection" {
-  description = "Endereco para acesso RDP ao servidor Windows. Abra o Remote Desktop Connection e use este endereco."
-  value       = "${aws_eip.windrose.public_ip}:3389"
+output "ssh_connection" {
+  description = "Comando SSH para acessar o servidor. Substitua 'seu-arquivo.pem' pelo caminho do seu Key Pair."
+  value       = "ssh -i seu-arquivo.pem ubuntu@${aws_eip.windrose.public_ip}"
 }
 
 output "game_connection_address" {
   description = "Endereco de conexao direta para os jogadores (IP:porta). Use no campo 'Connect to Server' do Windrose."
-  value       = "${aws_eip.windrose.public_ip}:${var.direct_connection_port}"
+  value       = "${aws_eip.windrose.public_ip}:${var.server_port}"
 }
 
 output "invite_code" {
@@ -28,7 +28,7 @@ output "invite_code" {
 }
 
 output "instance_id" {
-  description = "ID da instancia EC2. Util para gerenciar via AWS CLI (start/stop)."
+  description = "ID da instancia EC2. Util para gerenciar via AWS CLI ou script manage_instance.sh."
   value       = aws_instance.windrose.id
 }
 

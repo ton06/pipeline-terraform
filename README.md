@@ -1,8 +1,17 @@
 # 🏴‍☠️ Windrose Dedicated Server — AWS Infrastructure
 
-Infraestrutura Terraform para subir um servidor dedicado do jogo **Windrose** na AWS (região `sa-east-1` — São Paulo).
+Infraestrutura Terraform para subir um servidor dedicado do jogo **Windrose** na AWS (`sa-east-1` — São Paulo), usando a imagem Docker oficial da comunidade.
 
 > **Windrose** é um jogo de sobrevivência na Era da Pirataria — mundo aberto procedural, construção de bases, batalhas navais e combate soulslike. [Site oficial](https://playwindrose.com)
+
+---
+
+## 🐳 Stack
+
+- **EC2**: Ubuntu 24.04 LTS (`t3.large` por padrão) — sem custo de licença Windows
+- **Container**: [`indifferentbroccoli/windrose-server-docker`](https://github.com/indifferentbroccoli/windrose-server-docker)
+- **Orquestração**: Docker Compose
+- **Região**: `sa-east-1` (São Paulo)
 
 ---
 
@@ -14,8 +23,8 @@ Antes de rodar o Terraform, você precisa ter:
 - [ ] [AWS CLI](https://aws.amazon.com/cli/) instalado e configurado (`aws configure`)
 - [ ] Um **Key Pair** criado na AWS Console na região `sa-east-1`
   - Acesse: **EC2 → Key Pairs → Create key pair**
-  - Salve o arquivo `.pem` com segurança — você vai precisar para acessar o servidor via RDP
-- [ ] Seu IP público anotado para liberar acesso RDP
+  - Salve o arquivo `.pem` com segurança
+- [ ] Seu IP público anotado para liberar acesso SSH
   - Descubra em: https://checkip.amazonaws.com
 
 ---
@@ -31,8 +40,6 @@ cd pipeline-terraform
 
 ### 2. Configure as variáveis
 
-Copie o arquivo de exemplo e preencha com seus valores:
-
 ```bash
 cp terraform.tfvars.example terraform.tfvars
 ```
@@ -42,9 +49,7 @@ Preencha **obrigatoriamente** no `terraform.tfvars`:
 | Variável | Descrição | Exemplo |
 |---|---|---|
 | `key_pair_name` | Nome do seu Key Pair na AWS | `"meu-key-pair"` |
-| `admin_cidr_ssh` | Seu IP para acesso RDP (formato CIDR) | `"203.0.113.10/32"` |
-
-As demais variáveis já têm valores padrão funcionais.
+| `admin_cidr_ssh` | Seu IP para acesso SSH (formato CIDR) | `"203.0.113.10/32"` |
 
 ### 3. Inicialize e aplique
 
@@ -58,7 +63,7 @@ Após o apply, você verá os outputs:
 
 ```
 server_public_ip        = "54.x.x.x"
-rdp_connection          = "54.x.x.x:3389"
+ssh_connection          = "ssh -i seu-arquivo.pem ubuntu@54.x.x.x"
 game_connection_address = "54.x.x.x:7777"
 invite_code             = "amigos2026"
 instance_id             = "i-0abc123..."
@@ -68,28 +73,31 @@ instance_id             = "i-0abc123..."
 
 ## 🎮 Iniciando o servidor
 
-1. Conecte-se via **Remote Desktop (RDP)**
-   - Endereço: `<rdp_connection output>`
-   - Usuário: `Administrator`
-   - Senha: recupere em **EC2 → Instances → Get Windows Password** usando seu arquivo `.pem`
+O container sobe **automaticamente** na primeira inicialização via User Data. Para acompanhar:
 
-2. Aguarde o setup terminar (~10 min na primeira inicialização)
-   - Acompanhe o progresso em `C:\windrose-setup.log`
+```bash
+# Conectar ao servidor
+ssh -i seu-arquivo.pem ubuntu@<server_public_ip>
 
-3. Use o atalho **"Iniciar Windrose Server"** na área de trabalho
-   - Ou execute `C:\windrose-server\StartServerForeground.bat` diretamente
+# Ver log do setup inicial
+cat /var/log/windrose-setup.log
 
-4. Compartilhe com os amigos:
-   - **Invite Code**: configurado no `terraform.tfvars`
-   - **Conexão direta**: `<server_public_ip>:7777`
+# Ver logs do container em tempo real
+docker compose -f /opt/windrose/docker-compose.yml logs -f
+
+# Ver status do container
+docker compose -f /opt/windrose/docker-compose.yml ps
+```
+
+Compartilhe com os amigos:
+- **Invite Code**: configurado no `terraform.tfvars` (ex: `amigos2026`)
+- **Conexão direta**: `<server_public_ip>:7777`
 
 ---
 
 ## 💸 Gerenciamento de custos
 
 ### Ligar/desligar o servidor
-
-Use o script auxiliar para economizar quando não estiver jogando:
 
 ```bash
 # Ligar o servidor
@@ -102,44 +110,28 @@ Use o script auxiliar para economizar quando não estiver jogando:
 ./scripts/manage_instance.sh status
 ```
 
-> ⚠️ O **Elastic IP** gera ~$0.005/hora quando alocado sem instância rodando. Se não for usar por um período longo, rode `terraform destroy` para eliminar este custo.
+> ⚠️ O **Elastic IP** gera ~$0.005/hora quando alocado sem instância rodando. Use `terraform destroy` para eliminar todos os custos quando não for usar por um período longo.
 
 ### Estimativa de custos (on-demand, sa-east-1)
 
-| Recurso | t3.large (padrão) | m5.xlarge (upgrade) |
+| Recurso | t3.large Linux | t3.large Windows (ref.) |
 |---|---|---|
-| EC2 Windows/hora | ~$0.208 | ~$0.353 |
-| **Mensal 24/7** | **~$150/mês** | **~$254/mês** |
-| **Mensal 8h/dia** | **~$50/mês** | **~$85/mês** |
+| EC2/hora | ~$0.104 | ~$0.208 |
+| **Mensal 24/7** | **~$75/mês** | ~~$150/mês~~ |
+| **Mensal 8h/dia** | **~$25/mês** | ~~$50/mês~~ |
 | EBS gp3 50 GB | ~$5/mês | ~$5/mês |
 | Elastic IP | ~$3.6/mês | ~$3.6/mês |
 
 ---
 
-## ⚠️ Aviso importante sobre RAM
-
-A instância `t3.large` tem **8 GB de RAM**. O guia oficial do Windrose recomenda:
-
-| Jogadores | RAM recomendada |
-|---|---|
-| 2 jogadores | 8 GB |
-| 4 jogadores | **12 GB** |
-| 6–10 jogadores | **16 GB** |
-
-Para 6 jogadores simultâneos, considere fazer upgrade para **`m5.xlarge`** alterando `instance_type` no `terraform.tfvars`.
-
----
-
 ## 🔄 Atualizando o servidor do jogo
 
-Sempre que o Windrose receber uma atualização, atualize o servidor:
-
-```powershell
-# Execute via RDP no servidor Windows
-C:\scripts\update_server.ps1
+```bash
+# SSH no servidor e execute:
+sudo /opt/windrose/update_server.sh
 ```
 
-> ⚠️ Versões diferentes entre cliente e servidor causam bugs de conexão. Atualize sempre após um patch do jogo.
+> ⚠️ Sempre atualize o servidor após um patch do jogo. Versões diferentes causam bugs de conexão.
 
 ---
 
@@ -149,7 +141,7 @@ C:\scripts\update_server.ps1
 terraform destroy
 ```
 
-> ⚠️ Isso deleta tudo, incluindo os saves do servidor. Faça backup de `C:\windrose-server\R5\Saved\` antes.
+> ⚠️ Isso deleta tudo, incluindo os saves do servidor. Faça backup de `/opt/windrose/server-files/` antes.
 
 ---
 
@@ -157,15 +149,14 @@ terraform destroy
 
 ```
 pipeline-terraform/
-├── main.tf                    # Recursos AWS (EC2, Security Group, Elastic IP)
-├── variables.tf               # Declaração de variáveis
-├── outputs.tf                 # Outputs após o apply
-├── terraform.tfvars.example   # Template de configuração (COPIE para terraform.tfvars)
-├── .gitignore                 # Protege .tfstate e .tfvars com segredos
+├── main.tf                    # Recursos AWS (EC2 Ubuntu, Security Group, Elastic IP)
+├── variables.tf               # Declaracao de variaveis
+├── outputs.tf                 # Outputs apos o apply
+├── terraform.tfvars.example   # Template de configuracao (COPIE para terraform.tfvars)
+├── .gitignore                 # Protege .tfstate, .tfvars e .env
 ├── scripts/
-│   ├── setup_windrose.ps1     # Setup automático via EC2 User Data (roda 1x)
-│   ├── start_server.ps1       # Inicia o servidor manualmente
-│   ├── update_server.ps1      # Atualiza o servidor via SteamCMD
+│   ├── setup_docker.sh        # Setup automatico via EC2 User Data (roda 1x)
+│   ├── update_server.sh       # Atualiza o servidor via Docker pull
 │   └── manage_instance.sh     # Liga/desliga EC2 via AWS CLI
 └── README.md
 ```
@@ -175,6 +166,6 @@ pipeline-terraform/
 ## 🔗 Referências
 
 - [Guia oficial do Windrose Dedicated Server](https://playwindrose.com/dedicated-server-guide/)
-- [Windrose no Steam](https://store.steampowered.com/app/windrose)
-- [AWS EC2 Instance Types e preços](https://instances.vantage.sh)
+- [indifferentbroccoli/windrose-server-docker](https://github.com/indifferentbroccoli/windrose-server-docker)
+- [AWS EC2 Instance Types e precos](https://instances.vantage.sh)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)

@@ -21,6 +21,10 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
+# Arquivo .env com segredos do servidor
+.env
+!.env.example
+
 # OS
 .DS_Store
 Thumbs.db
