@@ -48,10 +48,12 @@ systemctl start docker
 log "Docker instalado e iniciado"
 
 # --- 2. Criar diretorio e arquivo .env ---
+# IMPORTANTE: heredoc sem aspas simples para permitir substituicao
+# das variaveis pelo templatefile do Terraform.
 log "[2/4] Criando configuracao do servidor..."
 mkdir -p "$SERVER_DIR/server-files"
 
-cat > "$SERVER_DIR/.env" <<'ENVEOF'
+cat > "$SERVER_DIR/.env" <<ENVEOF
 PUID=1000
 PGID=1000
 UPDATE_ON_START=${update_on_start}
@@ -68,8 +70,10 @@ ENVEOF
 log ".env criado em $SERVER_DIR/.env"
 
 # --- 3. Criar docker-compose.yml ---
+# IMPORTANTE: heredoc sem aspas simples para permitir substituicao
+# da variavel ${server_port} pelo templatefile do Terraform.
 log "[3/4] Criando docker-compose.yml..."
-cat > "$SERVER_DIR/docker-compose.yml" <<'COMPOSEEOF'
+cat > "$SERVER_DIR/docker-compose.yml" <<COMPOSEEOF
 services:
   windrose:
     image: indifferentbroccoli/windrose-server-docker
@@ -98,7 +102,7 @@ log "Container iniciado. Verificando status:"
 docker compose ps
 
 log "=== Setup concluido com sucesso! ==="
-log "Invite Code  : ${invite_code}"
+log "Invite Code   : ${invite_code}"
 log "Conexao direta: <IP_PUBLICO>:${server_port}"
-log "Log completo : $LOG_FILE"
-log "Logs do jogo : docker compose -f $SERVER_DIR/docker-compose.yml logs -f"
+log "Log completo  : $LOG_FILE"
+log "Logs do jogo  : docker compose -f $SERVER_DIR/docker-compose.yml logs -f"

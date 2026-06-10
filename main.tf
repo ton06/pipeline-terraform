@@ -1,7 +1,7 @@
 # =============================================================================
 # main.tf — Recursos principais da infraestrutura Windrose na AWS
 # Imagem Docker: indifferentbroccoli/windrose-server-docker
-# SO: Ubuntu 24.04 LTS (sem licenca Windows — economia de 40-60%)
+# SO: Ubuntu 24.04 LTS
 # =============================================================================
 
 terraform {
@@ -98,7 +98,7 @@ resource "aws_security_group" "windrose" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Saida irrestrita — necessario para Docker puxar a imagem e SteamCMD funcionar
+  # Saida irrestrita — necessario para Docker puxar a imagem
   egress {
     description = "Saida irrestrita"
     from_port   = 0
@@ -136,13 +136,13 @@ resource "aws_instance" "windrose" {
 
   # User Data: instala Docker e sobe o container do Windrose automaticamente
   user_data = templatefile("${path.module}/scripts/setup_docker.sh", {
-    server_name          = var.server_name
-    invite_code          = var.invite_code
-    server_password      = var.server_password
-    max_players          = var.max_players
-    server_port          = var.server_port
+    server_name           = var.server_name
+    invite_code           = var.invite_code
+    server_password       = var.server_password
+    max_players           = var.max_players
+    server_port           = var.server_port
     use_direct_connection = var.use_direct_connection
-    update_on_start      = var.update_on_start
+    update_on_start       = var.update_on_start
   })
 
   user_data_replace_on_change = false
