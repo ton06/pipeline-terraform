@@ -2,28 +2,16 @@
 # terraform.tfvars.example
 # Copie este arquivo para terraform.tfvars e preencha os valores.
 # NUNCA commite o terraform.tfvars — ele esta no .gitignore.
+#
+# Acesso ao servidor: AWS SSM Session Manager (sem key pair, sem SSH).
+# Use: aws ssm start-session --target <instance_id> --region sa-east-1
 # =============================================================================
-
-# ------------------------------------------------------------------------------
-# OBRIGATORIO — preencha antes de rodar o terraform apply
-# ------------------------------------------------------------------------------
-
-# Nome do Key Pair existente na sua conta AWS (regiao sa-east-1).
-# Para criar: AWS Console -> EC2 -> Key Pairs -> Create key pair
-# Apos criar, baixe o arquivo .pem e guarde com seguranca.
-key_pair_name = "PREENCHA_COM_SEU_KEY_PAIR_NAME"
-
-# IP do administrador que tera acesso SSH ao servidor.
-# Formato CIDR: "203.0.113.10/32" para um IP especifico.
-# Descubra seu IP atual: https://checkip.amazonaws.com
-# EVITE "0.0.0.0/0" — libera SSH para o mundo todo (risco de seguranca).
-admin_cidr_ssh = "SEU_IP/32"
 
 # ------------------------------------------------------------------------------
 # OPCIONAL — valores padrao ja configurados, altere se necessario
 # ------------------------------------------------------------------------------
 
-# Tipo da instancia EC2 Linux (sem custo de licenca Windows).
+# Tipo da instancia EC2 Linux.
 # t3.large: 2 vCPU / 8 GB RAM — adequado para ate 6 jogadores.
 # Referencia de precos: https://instances.vantage.sh
 instance_type = "t3.large"

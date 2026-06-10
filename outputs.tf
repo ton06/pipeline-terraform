@@ -12,9 +12,9 @@ output "server_public_dns" {
   value       = aws_eip.windrose.public_dns
 }
 
-output "ssh_connection" {
-  description = "Comando SSH para acessar o servidor. Substitua 'seu-arquivo.pem' pelo caminho do seu Key Pair."
-  value       = "ssh -i seu-arquivo.pem ubuntu@${aws_eip.windrose.public_ip}"
+output "ssm_connection" {
+  description = "Comando AWS CLI para abrir terminal na EC2 via SSM Session Manager (sem SSH, sem key pair)."
+  value       = "aws ssm start-session --target ${aws_instance.windrose.id} --region ${var.aws_region}"
 }
 
 output "game_connection_address" {
@@ -28,7 +28,7 @@ output "invite_code" {
 }
 
 output "instance_id" {
-  description = "ID da instancia EC2. Util para gerenciar via AWS CLI ou script manage_instance.sh."
+  description = "ID da instancia EC2. Util para gerenciar via AWS CLI ou SSM."
   value       = aws_instance.windrose.id
 }
 

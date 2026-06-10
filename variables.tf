@@ -8,20 +8,8 @@ variable "aws_region" {
   default     = "sa-east-1"
 }
 
-variable "key_pair_name" {
-  description = "Nome do Key Pair existente na conta AWS (regiao sa-east-1). Crie em: EC2 -> Key Pairs -> Create key pair. Sem este valor o terraform apply falha."
-  type        = string
-  # Sem default — obrigatorio preencher no terraform.tfvars
-}
-
-variable "admin_cidr_ssh" {
-  description = "CIDR IP autorizado para acesso SSH (porta 22). Ex: '203.0.113.10/32'. Descubra seu IP em: https://checkip.amazonaws.com"
-  type        = string
-  # Sem default — obrigatorio preencher no terraform.tfvars
-}
-
 variable "instance_type" {
-  description = "Tipo da instancia EC2 Linux. Padrao: t3.large (2 vCPU / 8 GB RAM). Sem custo de licenca Windows."
+  description = "Tipo da instancia EC2 Linux. Padrao: t3.large (2 vCPU / 8 GB RAM)."
   type        = string
   default     = "t3.large"
 }

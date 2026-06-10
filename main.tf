@@ -2,6 +2,7 @@
 # main.tf — Recursos principais da infraestrutura Windrose na AWS
 # Imagem Docker: indifferentbroccoli/windrose-server-docker
 # SO: Ubuntu 24.04 LTS
+# Acesso: IAM Instance Profile + SSM Session Manager (sem key pair / sem SSH)
 # =============================================================================
 
 terraform {
@@ -63,22 +64,42 @@ data "aws_vpc" "default" {
 }
 
 # -----------------------------------------------------------------------------
+# IAM Role + Instance Profile (SSM Session Manager)
+# Permite acesso ao terminal da EC2 direto pelo console AWS,
+# sem necessidade de key pair ou regra SSH no Security Group.
+# -----------------------------------------------------------------------------
+
+resource "aws_iam_role" "windrose_ssm" {
+  name = "windrose-server-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "windrose_ssm" {
+  role       = aws_iam_role.windrose_ssm.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "windrose_ssm" {
+  name = "windrose-server-ssm-profile"
+  role = aws_iam_role.windrose_ssm.name
+}
+
+# -----------------------------------------------------------------------------
 # Security Group
 # -----------------------------------------------------------------------------
 
 resource "aws_security_group" "windrose" {
   name        = "windrose-server-sg"
-  description = "Security Group do servidor Windrose. SSH restrito ao admin, porta do jogo aberta para jogadores."
+  description = "Security Group do servidor Windrose. Porta do jogo aberta para jogadores, sem SSH exposto."
   vpc_id      = data.aws_vpc.default.id
-
-  # SSH — acesso ao servidor Linux (restrito ao IP do admin)
-  ingress {
-    description = "SSH - Acesso do administrador"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.admin_cidr_ssh]
-  }
 
   # Porta do jogo — TCP (conexao direta dos jogadores)
   ingress {
@@ -98,7 +119,7 @@ resource "aws_security_group" "windrose" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Saida irrestrita — necessario para Docker puxar a imagem
+  # Saida irrestrita — necessario para Docker puxar a imagem e SSM Agent comunicar
   egress {
     description = "Saida irrestrita"
     from_port   = 0
@@ -119,7 +140,7 @@ resource "aws_security_group" "windrose" {
 resource "aws_instance" "windrose" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  key_name               = var.key_pair_name
+  iam_instance_profile   = aws_iam_instance_profile.windrose_ssm.name
   vpc_security_group_ids = [aws_security_group.windrose.id]
 
   # EBS root volume — 50 GB gp3 SSD para SO + imagem Docker + saves do servidor

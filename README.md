@@ -11,6 +11,7 @@ Infraestrutura Terraform para subir um servidor dedicado do jogo **Windrose** na
 - **EC2**: Ubuntu 24.04 LTS (`t3.large` por padrão)
 - **Container**: [`indifferentbroccoli/windrose-server-docker`](https://github.com/indifferentbroccoli/windrose-server-docker)
 - **Orquestração**: Docker Compose
+- **Acesso ao servidor**: AWS SSM Session Manager (sem key pair, sem SSH exposto)
 - **Região**: `sa-east-1` (São Paulo)
 
 ---
@@ -21,11 +22,8 @@ Antes de rodar o Terraform, você precisa ter:
 
 - [ ] [Terraform >= 1.6.0](https://developer.hashicorp.com/terraform/install) instalado
 - [ ] [AWS CLI](https://aws.amazon.com/cli/) instalado e configurado (`aws configure`)
-- [ ] Um **Key Pair** criado na AWS Console na região `sa-east-1`
-  - Acesse: **EC2 → Key Pairs → Create key pair**
-  - Salve o arquivo `.pem` com segurança
-- [ ] Seu IP público anotado para liberar acesso SSH
-  - Descubra em: https://checkip.amazonaws.com
+- [ ] [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) instalado (para abrir terminal via SSM)
+- [ ] IAM com permissões para criar EC2, IAM Role e Security Group
 
 ---
 
@@ -44,12 +42,7 @@ cd pipeline-terraform
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Preencha **obrigatoriamente** no `terraform.tfvars`:
-
-| Variável | Descrição | Exemplo |
-|---|---|---|
-| `key_pair_name` | Nome do seu Key Pair na AWS | `"meu-key-pair"` |
-| `admin_cidr_ssh` | Seu IP para acesso SSH (formato CIDR) | `"203.0.113.10/32"` |
+Todos os valores já têm defaults funcionais. Edite o `terraform.tfvars` apenas se quiser personalizar nome do servidor, senha, número de jogadores etc.
 
 ### 3. Inicialize e aplique
 
@@ -63,7 +56,7 @@ Após o apply, você verá os outputs:
 
 ```
 server_public_ip        = "54.x.x.x"
-ssh_connection          = "ssh -i seu-arquivo.pem ubuntu@54.x.x.x"
+ssm_connection          = "aws ssm start-session --target i-0abc123... --region sa-east-1"
 game_connection_address = "54.x.x.x:7777"
 invite_code             = "amigos2026"
 instance_id             = "i-0abc123..."
@@ -73,11 +66,11 @@ instance_id             = "i-0abc123..."
 
 ## 🎮 Iniciando o servidor
 
-O container sobe **automaticamente** na primeira inicialização via User Data. Para acompanhar:
+O container sobe **automaticamente** na primeira inicialização via User Data. Para acompanhar via SSM:
 
 ```bash
-# Conectar ao servidor
-ssh -i seu-arquivo.pem ubuntu@<server_public_ip>
+# Abrir terminal na EC2 (sem SSH, sem key pair)
+aws ssm start-session --target <instance_id> --region sa-east-1
 
 # Ver log do setup inicial
 cat /var/log/windrose-setup.log
@@ -125,7 +118,7 @@ Compartilhe com os amigos:
 ## 🔄 Atualizando o servidor do jogo
 
 ```bash
-# SSH no servidor e execute:
+# Via SSM na EC2:
 sudo /opt/windrose/update_server.sh
 ```
 
@@ -147,7 +140,7 @@ terraform destroy
 
 ```
 pipeline-terraform/
-├── main.tf                    # Recursos AWS (EC2 Ubuntu, Security Group, Elastic IP)
+├── main.tf                    # EC2 Ubuntu, IAM Role SSM, Security Group, Elastic IP
 ├── variables.tf               # Declaracao de variaveis
 ├── outputs.tf                 # Outputs apos o apply
 ├── terraform.tfvars.example   # Template de configuracao (COPIE para terraform.tfvars)
@@ -165,5 +158,6 @@ pipeline-terraform/
 
 - [Guia oficial do Windrose Dedicated Server](https://playwindrose.com/dedicated-server-guide/)
 - [indifferentbroccoli/windrose-server-docker](https://github.com/indifferentbroccoli/windrose-server-docker)
+- [AWS SSM Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
 - [AWS EC2 Instance Types e precos](https://instances.vantage.sh)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
