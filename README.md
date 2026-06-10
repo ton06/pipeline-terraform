@@ -53,4 +53,11 @@ aws ssm start-session --target <instance_id> --region sa-east-1
 
 # Logs do container
 docker compose -f /opt/windrose/docker-compose.yml logs -f
+
+# Atualizar servidor apos patch do jogo
+sudo /opt/windrose/update_server.sh
 ```
+
+## Aviso
+
+O passo `terraform validate` em [ton06/workflows](https://github.com/ton06/workflows/blob/main/.github/workflows/terraform.yml) roda fora do diretorio `infra/` — pode falhar. Verificar com o Tom.

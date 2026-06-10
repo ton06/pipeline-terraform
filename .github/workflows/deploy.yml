@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     uses: ton06/workflows/.github/workflows/terraform.yml@main
+    secrets: inherit
     with:
       environment: prods
       aws-region: sa-east-1
