@@ -21,11 +21,21 @@ function Log($msg) {
     "[$timestamp] $msg" | Tee-Object -FilePath $logFile -Append
 }
 
+# Captura qualquer erro fatal, loga e encerra com codigo de erro
+trap {
+    Log "ERRO FATAL: $_"
+    exit 1
+}
+
 Log "=== Iniciando setup do Windrose Dedicated Server ==="
 
-$steamCmdDir    = "C:\steamcmd"
-$serverDir      = "C:\windrose-server"
-$serverDescFile = "$serverDir\R5\ServerDescription.json"
+$steamCmdDir   = "C:\steamcmd"
+$serverDir     = "C:\windrose-server"
+
+# Caminho correto do ServerDescription.json conforme guia oficial do Windrose:
+# https://playwindrose.com/dedicated-server-guide/
+$serverDescDir  = "$serverDir\R5\Saved\SaveProfiles\Default"
+$serverDescFile = "$serverDescDir\ServerDescription.json"
 
 # --- 1. Instalar SteamCMD ---
 Log "[1/4] Instalando SteamCMD..."
@@ -59,30 +69,28 @@ if ($process.ExitCode -ne 0) {
 Log "Windrose Dedicated Server baixado com sucesso em $serverDir"
 
 # --- 3. Criar ServerDescription.json ---
+# Usamos ConvertTo-Json para evitar conflito de aspas duplas com o
+# templatefile do Terraform, que substituiria as variaveis ${...} incorretamente
+# dentro de um here-string PowerShell com JSON.
 Log "[3/4] Configurando ServerDescription.json..."
-New-Item -ItemType Directory -Path "$serverDir\R5" -Force | Out-Null
+New-Item -ItemType Directory -Path $serverDescDir -Force | Out-Null
 
-$isPasswordProtected = if ("${server_password}" -ne "") { "true" } else { "false" }
-
-$serverDescContent = @"
-{
-  "Version": 1,
-  "ServerDescription_Persistent": {
-    "InviteCode": "${invite_code}",
-    "IsPasswordProtected": $isPasswordProtected,
-    "Password": "${server_password}",
-    "ServerName": "${server_name}",
-    "MaxPlayerCount": ${max_players},
-    "UseDirectConnection": true,
-    "DirectConnectionServerPort": ${direct_connection_port},
-    "DirectConnectionProxyAddress": "0.0.0.0",
-    "AutoLoadLatestBackupIfHasBroken": true,
-    "CanLaunchMultipleServerInstances": false
-  }
+$serverDesc = @{
+    Version = 1
+    ServerDescription_Persistent = @{
+        InviteCode                       = "${invite_code}"
+        IsPasswordProtected              = if ("${server_password}" -ne "") { $true } else { $false }
+        Password                         = "${server_password}"
+        ServerName                       = "${server_name}"
+        MaxPlayerCount                   = ${max_players}
+        UseDirectConnection              = $true
+        DirectConnectionServerPort       = ${direct_connection_port}
+        DirectConnectionProxyAddress     = "0.0.0.0"
+        AutoLoadLatestBackupIfHasBroken  = $true
+        CanLaunchMultipleServerInstances = $false
+    }
 }
-"@
-
-$serverDescContent | Out-File -FilePath $serverDescFile -Encoding UTF8 -Force
+$serverDesc | ConvertTo-Json -Depth 3 | Out-File -FilePath $serverDescFile -Encoding UTF8 -Force
 Log "ServerDescription.json criado em $serverDescFile"
 
 # --- 4. Atalho na area de trabalho ---

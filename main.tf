@@ -15,9 +15,7 @@ terraform {
   # State armazenado localmente.
   # Para uso em equipe, considere migrar para S3 backend com DynamoDB lock:
   # https://developer.hashicorp.com/terraform/language/backend/s3
-  backend "local" {
-    path = "terraform.tfstate"
-  }
+  backend "local" {}
 }
 
 provider "aws" {
