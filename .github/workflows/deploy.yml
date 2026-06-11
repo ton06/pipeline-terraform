@@ -14,5 +14,5 @@ jobs:
     uses: ton06/workflows/.github/workflows/deploy.yml@main
     secrets: inherit
     with:
-      environment: prods
+      environment: main
       aws-region: "sa-east-1"
