@@ -3,7 +3,7 @@
 # =============================================================================
 
 output "server_public_ip" {
-  description = "IP publico fixo do servidor Windrose (Elastic IP). Compartilhe com os amigos para conexao direta."
+  description = "IP publico fixo do servidor Windrose (Elastic IP)."
   value       = aws_eip.windrose.public_ip
 }
 
@@ -13,12 +13,12 @@ output "server_public_dns" {
 }
 
 output "ssm_connection" {
-  description = "Comando AWS CLI para abrir terminal na EC2 via SSM Session Manager (sem SSH, sem key pair)."
+  description = "Comando para abrir terminal na EC2 via SSM Session Manager."
   value       = "aws ssm start-session --target ${aws_instance.windrose.id} --region ${var.aws_region}"
 }
 
 output "game_connection_address" {
-  description = "Endereco de conexao direta para os jogadores (IP:porta). Use no campo 'Connect to Server' do Windrose."
+  description = "Endereco de conexao direta para os jogadores (IP:porta)."
   value       = "${aws_eip.windrose.public_ip}:${var.server_port}"
 }
 
@@ -28,7 +28,7 @@ output "invite_code" {
 }
 
 output "instance_id" {
-  description = "ID da instancia EC2. Util para gerenciar via AWS CLI ou SSM."
+  description = "ID da instancia EC2."
   value       = aws_instance.windrose.id
 }
 

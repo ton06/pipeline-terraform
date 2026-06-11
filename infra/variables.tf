@@ -46,7 +46,7 @@ variable "server_port" {
 }
 
 variable "use_direct_connection" {
-  description = "Habilita conexao direta por IP:porta (USE_DIRECT_CONNECTION=true). Recomendado para servidores sem relay."
+  description = "Habilita conexao direta por IP:porta (USE_DIRECT_CONNECTION=true)."
   type        = bool
   default     = true
 }

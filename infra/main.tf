@@ -15,10 +15,8 @@ terraform {
     }
   }
 
-  # State armazenado localmente.
-  # Para uso em equipe, considere migrar para S3 backend com DynamoDB lock:
-  # https://developer.hashicorp.com/terraform/language/backend/s3
-  backend "local" {}
+  # State remoto no S3 — configurado via -backend-config pelo workflow ton06/workflows
+  backend "s3" {}
 }
 
 provider "aws" {
