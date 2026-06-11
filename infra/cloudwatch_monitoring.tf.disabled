@@ -1,0 +1,110 @@
+# Configuração de CloudWatch Logs para Windrose Server
+# Este arquivo pode ser incorporado ao arquivo ec2_windrose.tf se necessário
+
+# CloudWatch Log Group para os logs do Windrose
+resource "aws_cloudwatch_log_group" "windrose_logs" {
+  name              = "/aws/ec2/windrose-server"
+  retention_in_days = 7
+
+  tags = {
+    Name        = "windrose-server-logs"
+    Environment = var.environment
+  }
+}
+
+# IAM Role para a instância EC2 ter permissões de enviar logs
+resource "aws_iam_role" "windrose_ec2_role" {
+  name_prefix = "windrose-ec2-role-"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Policy para CloudWatch Logs
+resource "aws_iam_role_policy" "windrose_cloudwatch_logs" {
+  name_prefix = "windrose-cloudwatch-logs-"
+  role        = aws_iam_role.windrose_ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "${aws_cloudwatch_log_group.windrose_logs.arn}:*"
+      }
+    ]
+  })
+}
+
+# Instance Profile para usar a IAM Role
+resource "aws_iam_instance_profile" "windrose_instance_profile" {
+  name_prefix = "windrose-instance-profile-"
+  role        = aws_iam_role.windrose_ec2_role.name
+}
+
+# CloudWatch Alarms para monitoramento
+resource "aws_cloudwatch_metric_alarm" "ec2_cpu_utilization" {
+  alarm_name          = "windrose-server-high-cpu"
+  alarm_description   = "Alert when Windrose server CPU is high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+
+  dimensions = {
+    InstanceId = aws_instance.windrose_server.id
+  }
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ec2_status_check_failed" {
+  alarm_name          = "windrose-server-status-check-failed"
+  alarm_description   = "Alert when Windrose server status check fails"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "StatusCheckFailed"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 1
+
+  dimensions = {
+    InstanceId = aws_instance.windrose_server.id
+  }
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+# Outputs para CloudWatch
+output "windrose_cloudwatch_log_group" {
+  description = "CloudWatch Log Group for Windrose Server"
+  value       = aws_cloudwatch_log_group.windrose_logs.name
+}
+
+output "windrose_iam_role_arn" {
+  description = "ARN of IAM Role for Windrose Server"
+  value       = aws_iam_role.windrose_ec2_role.arn
+}
+
