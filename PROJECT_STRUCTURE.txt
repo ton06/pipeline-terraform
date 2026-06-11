@@ -1,0 +1,308 @@
+📦 ESTRUTURA FINAL DO PROJETO - Windrose Game Server na AWS
+═══════════════════════════════════════════════════════════════
+
+pipeline-terraform/
+│
+├── 📖 README.md                          [DOCUMENTAÇÃO PRINCIPAL]
+│   └─ Guia completo de uso e configuração
+│
+├── 📋 IMPLEMENTATION_SUMMARY.txt          [RESUMO EXECUTIVO]
+│   └─ Tudo que foi implementado e como começar
+│
+├── 📚 COMMANDS.md                         [GUIA DE COMANDOS]
+│   └─ Referência com todos os comandos Terraform úteis
+│
+├── 🔧 EXTENSIONS.md                      [FUTURAS MELHORIAS]
+│   └─ Exemplos de como estender o projeto
+│
+├── ✅ VALIDATION_CHECKLIST.md            [PÓS-DEPLOYMENT]
+│   └─ Checklist para validar o deployment
+│
+├── .gitignore                            [GIT IGNORE]
+│   └─ Padrões para ignorar arquivos Terraform
+│
+├── .github/
+│   └── workflows/
+│       ├── main.yml                      [CI/CD para main]
+│       └── develop.yml                   [CI/CD para develop]
+│
+└── infra/                                [⭐ INFRAESTRUTURA TERRAFORM]
+    │
+    ├���─ 🎯 ec2_windrose.tf               [NOVO - PRINCIPAL]
+    │   ├─ Security Group (SSH + Windrose)
+    │   ├─ EC2 Instance (Ubuntu 22.04 LTS)
+    │   ├─ Elastic IP (IP público estático)
+    │   └─ Outputs (IPs, URLs, etc)
+    │
+    ├── 📄 main.tf                        [EXISTENTE]
+    │   └─ S3 Bucket
+    │
+    ├── variables.tf                      [MODIFICADO]
+    │   ├��� bucket_name (S3)
+    │   ├─ environment (dev/main)
+    │   ├─ ec2_instance_type (t3.micro)
+    │   ├─ ec2_key_name (SSH key) ⭐ IMPORTANTE
+    │   ├─ windrose_port (8000)
+    │   └─ instance_name
+    │
+    ├── providers.tf                      [EXISTENTE]
+    │   └─ AWS Provider (região: sa-east-1)
+    │
+    ├── backend.tf                        [EXISTENTE]
+    │   └─ Backend S3 para state
+    │
+    ├── ⚙️ userdata.sh                    [NOVO - SCRIPT]
+    │   ├─ Atualiza Ubuntu
+    │   ├─ Instala Docker
+    │   ├─ Puxa imagem windrose-server
+    │   └─ Inicia container
+    │
+    ├── 📊 cloudwatch_monitoring.tf.disabled  [NOVO - OPCIONAL]
+    │   ├─ CloudWatch Log Group
+    │   ├─ IAM Roles
+    │   └─ CloudWatch Alarms
+    │   └─ [Renomear para .tf para ativar]
+    │
+    ├── destroy.json                      [EXISTENTE]
+    │   └─ Arquivo de configuração
+    │
+    └── environments/
+        │
+        ├── dev/                          [DESENVOLVIMENTO]
+        │   └── terraform.tfvars          [MODIFICADO]
+        │       ├─ bucket_name = "testes-pipeline-terraform"
+        │       ├─ ec2_key_name = "sua-chave" ⭐ EDITAR AQUI
+        │       ├─ environment = "dev"
+        │       ├─ instance_name = "windrose-dev-server"
+        │       ├─ ec2_instance_type = "t3.micro"
+        │       └─ windrose_port = 8000
+        │
+        └── main/                         [PRODUÇÃO]
+            └── terraform.tfvars          [NOVO]
+                ├─ bucket_name = "testes-pipeline-terraform-main"
+                ├─ ec2_key_name = "sua-chave" ⭐ EDITAR AQUI
+                ├─ environment = "main"
+                ├─ instance_name = "windrose-main-server"
+                ├─ ec2_instance_type = "t3.small"
+                └─ windrose_port = 8000
+
+═══════════════════════════════════════════════════════════════
+
+📋 ARQUIVOS CRIADOS/MODIFICADOS - SUMÁRIO:
+
+✅ NOVOS (7 arquivos):
+   1. infra/ec2_windrose.tf              - Recursos EC2 para Windrose
+   2. infra/userdata.sh                  - Script de inicialização
+   3. infra/cloudwatch_monitoring.tf.disabled - Monitoramento (opcional)
+   4. infra/environments/main/terraform.tfvars - Config para main
+   5. IMPLEMENTATION_SUMMARY.txt          - Resumo executivo
+   6. COMMANDS.md                         - Guia de comandos
+   7. EXTENSIONS.md                       - Futuras melhorias
+
+✏️ MODIFICADOS (2 arquivos):
+   1. infra/variables.tf                  - Adicionadas variáveis EC2
+   2. infra/environments/dev/terraform.tfvars - Adicionadas variáveis EC2
+   3. README.md                           - Documentação completa
+
+═══════════════════════════════════════════════════════════════
+
+🚀 RECURSOS CRIADOS NA AWS:
+
+┌─ COMPUTE
+│  ├─ EC2 Instance (Ubuntu 22.04 LTS)
+│  ├─ Security Group (Portas 22, 8000)
+│  └─ Elastic IP (IP Público Fixo)
+│
+├─ NETWORK
+│  ├─ Default VPC
+│  ├─ Default Subnet
+│  └─ Security Group Rules
+│
+├─ STORAGE (Existente)
+│  └─ S3 Bucket
+│
+└─ MONITORING (Opcional - Desabilitado)
+   ├─ CloudWatch Log Group
+   ├─ CloudWatch Alarms
+   ├─ IAM Role
+   └─ IAM Policies
+
+═══════════════════════════════════════════════��═══════════════
+
+🎯 PRÓXIMOS PASSOS:
+
+PASSO 1: PREPARAÇÃO
+   [ ] Instale Terraform (terraform.io)
+   [ ] Configure AWS CLI com suas credenciais
+   [ ] Crie uma EC2 Key Pair na AWS
+
+PASSO 2: CONFIGURAÇÃO
+   [ ] Edite: infra/environments/dev/terraform.tfvars
+       └─ Mude ec2_key_name para o nome da sua chave
+
+PASSO 3: DEPLOY
+   [ ] cd infra
+   [ ] terraform init
+   [ ] terraform plan -var-file="environments/dev/terraform.tfvars"
+   [ ] terraform apply -var-file="environments/dev/terraform.tfvars"
+
+PASSO 4: VALIDAÇÃO
+   [ ] Aguarde 3-5 minutos
+   [ ] Execute: terraform output
+   [ ] Salve o IP público
+   [ ] Teste acesso: http://<IP_PÚBLICO>:8000
+
+═══════════════════════════════════════════════════════════════
+
+🔗 MAPEAMENTO DE SERVIÇOS:
+
+Docker Image:
+  indifferentbroccoli/windrose-server:latest
+  └─ Repositório: https://github.com/indifferentbroccoli/windrose-server-docker
+
+AWS Services:
+  EC2
+  └─ Security Groups
+  └─ Elastic IP
+  └─ VPC
+  └─ IAM (Roles & Policies)
+  └─ CloudWatch (Opcional)
+
+═══════════════════════════════════════════════════════════════
+
+💡 INFORMAÇÕES IMPORTANTES:
+
+🔑 CREDENCIAIS:
+   - Arquivo de chave EC2: Salve em local seguro (~/.ssh/key.pem)
+   - Permissões: chmod 400 ~/.ssh/key.pem
+   - Não compartilhe a chave com ninguém
+
+📍 ACESSO:
+   - SSH: ssh -i ~/.ssh/key.pem ubuntu@<IP>
+   - HTTP: http://<IP>:8000
+   - Porta SSH: 22
+   - Porta Windrose: 8000
+
+⏱️ TEMPOS:
+   - Terraform init: 30-60s
+   - EC2 provision: 2-3 min
+   - Docker download: 1-2 min
+   - Container start: 10-30s
+   - Total: ~5-10 minutos
+
+💰 CUSTOS:
+   - EC2 t3.micro: ~$0.0104/hora ($7.50/mês)
+   - Elastic IP: Gratuito em uso
+   - Data transfer: Primeiros 1GB/mês gratuito
+   - Free tier: 750h/mês por 12 meses
+
+═══════════════════════════════════════════════════════════════
+
+📖 DOCUMENTAÇÃO DETALHADA:
+
+1. README.md
+   ├─ Descrição geral
+   ├─ Pré-requisitos
+   ├─ Configuração inicial
+   ├─ Saídas e variáveis
+   ├─ Segurança
+   ├─ Troubleshooting
+   └─ Próximas melhorias
+
+2. COMMANDS.md
+   ├─ Comandos Terraform
+   ├─ Debugging e logs
+   ├─ Importar recursos
+   ├─ Gerenciamento de ambientes
+   ├�� Monitoramento com AWS CLI
+   └─ Exemplos de uso
+
+3. EXTENSIONS.md
+   ├─ Load Balancer + Auto Scaling
+   ├─ RDS Database
+   ├─ Secrets Manager
+   ├─ Container Registry (ECR)
+   ├─ VPC customizado
+   ├─ CloudFront CDN
+   ├─ Route 53 DNS
+   ├─ Backup automático
+   └─ Terraform Modules
+
+4. VALIDATION_CHECKLIST.md
+   ├─ Fase 1-10 de validação
+   ├─ Troubleshooting
+   ├─ Script de validação autômata
+   └─ Confirmação de sucesso
+
+═══════════════════════════════════════════════════════════════
+
+✨ CARACTERÍSTICAS IMPLEMENTADAS:
+
+✅ Auto-Discovery da AMI Ubuntu mais recente
+✅ Security Group com regras apropriadas
+✅ Elastic IP para IP público fixo
+✅ User data script para automação completa
+✅ Docker instalado e configurado automaticamente
+✅ Container Windrose iniciando automaticamente
+✅ Auto-restart do container se falhar
+✅ Múltiplos ambientes (dev/main)
+✅ CloudWatch Logs (opcional)
+✅ CloudWatch Alarms (opcional)
+✅ Documentação completa
+
+═══════════════════════════════════════════════════════════════
+
+🔄 CICLO DE VIDA:
+
+CRIAR:
+  terraform apply -var-file="environments/dev/terraform.tfvars"
+
+ATUALIZAR:
+  terraform apply -var-file="environments/dev/terraform.tfvars"
+
+VERIFICAR:
+  terraform output
+  terraform state list
+
+DESTRUIR:
+  terraform destroy -var-file="environments/dev/terraform.tfvars"
+
+═══════════════════════════════════════════════════════════════
+
+❓ QUESTÕES FREQUENTES:
+
+P: Como mudo a porta do jogo?
+R: Edite windrose_port em terraform.tfvars
+
+P: Como aumento o tamanho da instância?
+R: Edite ec2_instance_type (de "t3.micro" para "t3.small", etc)
+
+P: Como adiciono monitoramento?
+R: Renomeie cloudwatch_monitoring.tf.disabled para .tf
+
+P: Como faço backup?
+R: Use AWS Backup ou crie snapshots automáticos
+
+P: Como faço deploy em produção?
+R: Use terraform -var-file="environments/main/terraform.tfvars"
+
+P: Posso usar um domínio customizado?
+R: Sim, adicione Route 53 (veja EXTENSIONS.md)
+
+═══════════════════════════════════════════════════════════════
+
+🎮 PRONTO PARA COMEÇAR!
+
+Sua infraestrutura Windrose na AWS está totalmente configurada.
+Siga os passos em "PRÓXIMOS PASSOS" acima para fazer deploy.
+
+Qualquer dúvida, consulte:
+  - README.md para setup
+  - COMMANDS.md para comandos
+  - VALIDATION_CHECKLIST.md para validação
+  - EXTENSIONS.md para futuras melhorias
+
+Divirta-se! 🚀
+
+═══════════════════════════════════════════════════════════════
+
